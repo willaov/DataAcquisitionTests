@@ -1,0 +1,9 @@
+[submodule "libraries/pico-onewire"]
+	path = libraries/pico-onewire
+	url = git@github.com:willaov/pico-onewire.git
+[submodule "libraries/ioLibrary_Driver"]
+	path = libraries/ioLibrary_Driver
+	url = https://github.com/Wiznet/ioLibrary_Driver.git
+[submodule "libraries/no-OS-FatFS-SD-SPI-RPi-Pico"]
+	path = libraries/no-OS-FatFS-SD-SPI-RPi-Pico
+	url = https://github.com/carlk3/no-OS-FatFS-SD-SPI-RPi-Pico.git
