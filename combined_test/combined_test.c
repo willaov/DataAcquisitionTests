@@ -17,9 +17,11 @@
 #include "w5x00_spi.h"
 
 #include "httpServer.h"
+#include "dhcp.h"
 #include "web_page.h"
 
 #include "adc_test.h"
+#include "one_wire_mux_test.h"
 #include "pico/cyw43_arch.h"
 
 /**
@@ -35,6 +37,10 @@
 
 /* Socket */
 #define HTTP_SOCKET_MAX_NUM 4
+#define SOCKET_DHCP 0
+
+/* Retry count */
+#define DHCP_RETRY_COUNT 5
 
 /**
  * ----------------------------------------------------------------------------------------------------
@@ -49,8 +55,14 @@ static wiz_NetInfo g_net_info =
         .sn = {255, 255, 255, 0},                    // Subnet Mask
         .gw = {192, 168, 1, 1},                     // Gateway
         .dns = {192, 168, 1, 1},                         // DNS server
-        .dhcp = NETINFO_STATIC                       // DHCP enable/disable
+        .dhcp = NETINFO_DHCP                       // DHCP enable/disable
 };
+static uint8_t g_ethernet_buf[ETHERNET_BUF_MAX_SIZE] = {
+    0,
+}; // common buffer
+
+/* DHCP */
+static uint8_t g_dhcp_get_ip_flag = 0;
 
 /* HTTP */
 static uint8_t g_http_send_buf[ETHERNET_BUF_MAX_SIZE] = {
@@ -68,6 +80,11 @@ static uint8_t g_http_socket_num_list[HTTP_SOCKET_MAX_NUM] = {0, 1, 2, 3};
  */
 /* Clock */
 static void set_clock_khz(void);
+
+/* DHCP */
+static void wizchip_dhcp_init(void);
+static void wizchip_dhcp_assign(void);
+static void wizchip_dhcp_conflict(void);
 
 /**
  * ----------------------------------------------------------------------------------------------------
@@ -94,6 +111,9 @@ int main()
     setup_adc();
     reset_adc();
 
+    // Onewire
+    setup_onewire();
+
     // Wiznet
     wizchip_spi_initialize();
     wizchip_cris_initialize();
@@ -102,7 +122,49 @@ int main()
     wizchip_initialize();
     wizchip_check();
 
-    network_initialize(g_net_info);
+    // network_initialize(g_net_info);
+
+    wizchip_dhcp_init();
+
+    uint8_t retval = 0;
+    uint8_t dhcp_retry = 0;
+    while (1)
+    {
+        /* Assigned IP through DHCP */
+        retval = DHCP_run();
+        printf("DHCP has run\n");
+
+        if (retval == DHCP_IP_LEASED)
+        {
+            if (g_dhcp_get_ip_flag == 0)
+            {
+                printf(" DHCP success\n");
+
+                g_dhcp_get_ip_flag = 1;
+                break;
+            }
+        }
+        else if (retval == DHCP_FAILED)
+        {
+            g_dhcp_get_ip_flag = 0;
+            dhcp_retry++;
+
+            if (dhcp_retry <= DHCP_RETRY_COUNT)
+            {
+                printf(" DHCP timeout occurred and retry %d\n", dhcp_retry);
+            }
+        }
+
+        if (dhcp_retry > DHCP_RETRY_COUNT)
+        {
+            printf(" DHCP failed\n");
+
+            DHCP_stop();
+
+            while (1)
+                ;
+        }
+    }
 
     httpServer_init(g_http_send_buf, g_http_recv_buf, HTTP_SOCKET_MAX_NUM, g_http_socket_num_list);
 
@@ -116,12 +178,17 @@ int main()
     #define DATA_PAGE_SIZE (sizeof(data_page) + 100)
     char data_page_filled[DATA_PAGE_SIZE];
 
+    #define ONEWIRE_PAGE_SIZE (sizeof(onewire_page) + 150)
+    char onewire_page_filled[ONEWIRE_PAGE_SIZE];
+
     /* Register web page */
     snprintf(index_page_filled, INDEX_PAGE_SIZE, index_page, "Unfilled");
     reg_httpServer_webContent((uint8_t*)"index.html", (uint8_t*)index_page_filled);
 
     /* Variables for loop */
     double voltages[8] = {0.0};
+    rom_address_t addresses[8] = {};
+    char* str_addresses[8] = {"0000000000000000"};
     /* Infinite loop */
     while (1)
     {
@@ -130,22 +197,25 @@ int main()
         {
             httpServer_run(i);
         }
-        
+
+        /* ADC Data Page */
         int16_t data[8] = {0};
-
         read_adc((uint16_t*)data);
-
         for (uint8_t j = 0; j < 8; j++) {
             voltages[j] = data[j] * 305e-6;
         }
-
         snprintf(data_page_filled, DATA_PAGE_SIZE, data_page, voltages[0], voltages[1], voltages[2], voltages[3], voltages[4], voltages[5], voltages[6], voltages[7]);
         reg_httpServer_webContent((uint8_t*)"data.html", (uint8_t*)data_page_filled);
-        printf("Running\n");
-        for (uint8_t j = 0; j < 8; j++) {
-            printf("%f, ", voltages[j]);
+
+        /* Onewire Page */
+        uint devices = check_for_devices(addresses);
+
+        for (int i=0; i < 8; i++) {
+            strfmtrom(str_addresses[i], addresses[i]);
         }
-        printf("\n");
+
+        snprintf(onewire_page_filled, ONEWIRE_PAGE_SIZE, onewire_page, devices, str_addresses[0], str_addresses[1], str_addresses[2], str_addresses[3], str_addresses[4], str_addresses[5], str_addresses[6], str_addresses[7]);
+        reg_httpServer_webContent((uint8_t*)"onewire.html", (uint8_t*)onewire_page_filled);
     }
 }
 
@@ -168,4 +238,39 @@ static void set_clock_khz(void)
         PLL_SYS_KHZ * 1000,                               // Input frequency
         PLL_SYS_KHZ * 1000                                // Output (must be same as no divider)
     );
+}
+
+/* DHCP */
+static void wizchip_dhcp_init(void)
+{
+    printf(" DHCP client running\n");
+
+    DHCP_init(SOCKET_DHCP, g_ethernet_buf);
+
+    reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
+}
+
+static void wizchip_dhcp_assign(void)
+{
+    getIPfromDHCP(g_net_info.ip);
+    getGWfromDHCP(g_net_info.gw);
+    getSNfromDHCP(g_net_info.sn);
+    getDNSfromDHCP(g_net_info.dns);
+
+    g_net_info.dhcp = NETINFO_DHCP;
+
+    /* Network initialize */
+    network_initialize(g_net_info); // apply from DHCP
+
+    print_network_information(g_net_info);
+    printf(" DHCP leased time : %ld seconds\n", getDHCPLeasetime());
+}
+
+static void wizchip_dhcp_conflict(void)
+{
+    printf(" Conflict IP from DHCP\n");
+
+    // halt or reset or any...
+    while (1)
+        ; // this example is halt.
 }

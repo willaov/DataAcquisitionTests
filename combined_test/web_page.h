@@ -23,6 +23,7 @@
                     "<html lang=\"en\">"\
                     "<head>"\
                         "<meta charset=\"UTF-8\">"\
+                        "<meta http-equiv=\"refresh\" content=\"1\">"\
                         "<title>Data Output</title>"\
                     "</head>"\
                     "<body>"\
@@ -63,6 +64,56 @@
                             "<tr>"\
                                 "<td>8</td>"\
                                 "<td>%.2f</td>"\
+                            "</tr>"\
+                        "</table>"\
+                    "</body>"\
+                    "</html>"
+
+#define onewire_page  "<!DOCTYPE html>"\
+                    "<html lang=\"en\">"\
+                    "<head>"\
+                        "<meta charset=\"UTF-8\">"\
+                        "<title>OneWire</title>"\
+                    "</head>"\
+                    "<body>"\
+                        "<h1>OneWire</h1>"\
+                        "<p>Found %d devices</p>"\
+                        "<table>"\
+                            "<tr>"\
+                                "<th>Channel</th>"\
+                                "<th>Device Address</th>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>1</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>2</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>3</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>4</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>5</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>6</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>7</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>8</td>"\
+                                "<td>%s</td>"\
                             "</tr>"\
                         "</table>"\
                     "</body>"\

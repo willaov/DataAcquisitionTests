@@ -3,15 +3,19 @@ add_executable(combined_test
         w5x00_gpio_irq.c
         w5x00_spi.c
         adc_test.c
+        mux_test.c
+        one_wire_mux_test.cpp
         )
 
 target_link_libraries(combined_test
         pico_stdlib
         pico_cyw43_arch_none
+        pico_one_wire
         hardware_spi
         hardware_dma
         ETHERNET_FILES
         HTTPSERVER_FILES
+        DHCP_FILES
         )
 
 # create map/bin/hex file etc.
