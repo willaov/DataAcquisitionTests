@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------------------------------------
  */
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "port_common.h"
 
@@ -132,7 +133,6 @@ int main()
     {
         /* Assigned IP through DHCP */
         retval = DHCP_run();
-        printf("DHCP has run\n");
 
         if (retval == DHCP_IP_LEASED)
         {
@@ -187,8 +187,11 @@ int main()
 
     /* Variables for loop */
     double voltages[8] = {0.0};
-    rom_address_t addresses[8] = {};
-    char* str_addresses[8] = {"0000000000000000"};
+    char* str_addresses[8];
+    for (int i=0; i < 8; i++) {
+        str_addresses[i] = (char*)malloc(sizeof("0000000000000000"));
+    }
+    const int x_to_w[8] = {4, 3, 2, 5, 6, 0, 7, 1};
     /* Infinite loop */
     while (1)
     {
@@ -202,16 +205,17 @@ int main()
         int16_t data[8] = {0};
         read_adc((uint16_t*)data);
         for (uint8_t j = 0; j < 8; j++) {
-            voltages[j] = data[j] * 305e-6;
+            voltages[j] = data[7-j] * 305e-6;
         }
         snprintf(data_page_filled, DATA_PAGE_SIZE, data_page, voltages[0], voltages[1], voltages[2], voltages[3], voltages[4], voltages[5], voltages[6], voltages[7]);
         reg_httpServer_webContent((uint8_t*)"data.html", (uint8_t*)data_page_filled);
 
         /* Onewire Page */
+        rom_address_t addresses[8] = {};
         uint devices = check_for_devices(addresses);
 
         for (int i=0; i < 8; i++) {
-            strfmtrom(str_addresses[i], addresses[i]);
+            strfmtrom(str_addresses[x_to_w[i]], addresses[i]);
         }
 
         snprintf(onewire_page_filled, ONEWIRE_PAGE_SIZE, onewire_page, devices, str_addresses[0], str_addresses[1], str_addresses[2], str_addresses[3], str_addresses[4], str_addresses[5], str_addresses[6], str_addresses[7]);

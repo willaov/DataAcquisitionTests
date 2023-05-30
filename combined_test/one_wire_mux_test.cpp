@@ -29,7 +29,9 @@ void setup_onewire() {
 }
 
 void strfmtrom(char* buffer, rom_address_t address) {
+    // printf("Printing %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
     sprintf(buffer, "%02x%02x%02x%02x%02x%02x%02x%02x", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
+    // printf("Buffer %s\n", buffer);
 }
 
 uint check_for_devices(rom_address_t addresses[8]) {
@@ -41,6 +43,7 @@ uint check_for_devices(rom_address_t addresses[8]) {
         if (found) {
             addresses[i] = one_wire.get_address(0);
             devices += 1;
+            // printf("Found %02x%02x%02x%02x%02x%02x%02x%02x on %d\n", addresses[i].rom[0], addresses[i].rom[1], addresses[i].rom[2], addresses[i].rom[3], addresses[i].rom[4], addresses[i].rom[5], addresses[i].rom[6], addresses[i].rom[7], i);
         }
     }
     return devices;
