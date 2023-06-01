@@ -171,15 +171,29 @@ int main()
     /* Get network information */
     print_network_information(g_net_info);
 
+    /* Pick Web Pages */
+    // #define DATA_PAGE
+    // #define ONEWIRE_PAGE
+    #define DEMO_PAGE
+
     /* Web page buffers */
     #define INDEX_PAGE_SIZE (sizeof(index_page) + 100)
     char index_page_filled[INDEX_PAGE_SIZE];
 
+    #ifdef DATA_PAGE
     #define DATA_PAGE_SIZE (sizeof(data_page) + 100)
     char data_page_filled[DATA_PAGE_SIZE];
+    #endif
 
+    #ifdef ONEWIRE_PAGE
     #define ONEWIRE_PAGE_SIZE (sizeof(onewire_page) + 150)
     char onewire_page_filled[ONEWIRE_PAGE_SIZE];
+    #endif
+
+    #ifdef DEMO_PAGE
+    #define DEMO_PAGE_SIZE (sizeof(demo_page) + 200)
+    char demo_page_filled[DEMO_PAGE_SIZE];
+    #endif
 
     /* Register web page */
     snprintf(index_page_filled, INDEX_PAGE_SIZE, index_page, "Unfilled");
@@ -207,8 +221,10 @@ int main()
         for (uint8_t j = 0; j < 8; j++) {
             voltages[j] = data[7-j] * 305e-6;
         }
+        #ifdef DATA_PAGE
         snprintf(data_page_filled, DATA_PAGE_SIZE, data_page, voltages[0], voltages[1], voltages[2], voltages[3], voltages[4], voltages[5], voltages[6], voltages[7]);
         reg_httpServer_webContent((uint8_t*)"data.html", (uint8_t*)data_page_filled);
+        #endif
 
         /* Onewire Page */
         rom_address_t addresses[8] = {};
@@ -217,9 +233,15 @@ int main()
         for (int i=0; i < 8; i++) {
             strfmtrom(str_addresses[x_to_w[i]], addresses[i]);
         }
-
+        #ifdef ONEWIRE_PAGE
         snprintf(onewire_page_filled, ONEWIRE_PAGE_SIZE, onewire_page, devices, str_addresses[0], str_addresses[1], str_addresses[2], str_addresses[3], str_addresses[4], str_addresses[5], str_addresses[6], str_addresses[7]);
         reg_httpServer_webContent((uint8_t*)"onewire.html", (uint8_t*)onewire_page_filled);
+        #endif
+
+        #ifdef DEMO_PAGE
+        snprintf(demo_page_filled, DEMO_PAGE_SIZE, demo_page, devices, voltages[0], str_addresses[0], voltages[1], str_addresses[1], voltages[2], str_addresses[2], voltages[3], str_addresses[3], str_addresses[4], str_addresses[5], str_addresses[6], str_addresses[7]);
+        reg_httpServer_webContent((uint8_t*)"demo.html", (uint8_t*)demo_page_filled);
+        #endif
     }
 }
 

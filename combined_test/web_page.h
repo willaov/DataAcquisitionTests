@@ -119,4 +119,64 @@
                     "</body>"\
                     "</html>"
 
+#define demo_page  "<!DOCTYPE html>"\
+                    "<html lang=\"en\">"\
+                    "<head>"\
+                        "<meta charset=\"UTF-8\">"\
+                        "<meta http-equiv=\"refresh\" content=\"1\">"\
+                        "<title>Demo Page</title>"\
+                    "</head>"\
+                    "<body>"\
+                        "<h1>Data and Devices</h1>"\
+                        "<p>Found %d devices</p>"\
+                        "<table>"\
+                            "<tr>"\
+                                "<th>Channel</th>"\
+                                "<th>Data/V</th>"\
+                                "<th>Device Address</th>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>1</td>"\
+                                "<td>%.2f</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>2</td>"\
+                                "<td>%.2f</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>3</td>"\
+                                "<td>%.2f</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>4</td>"\
+                                "<td>%.2f</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>5</td>"\
+                                "<td>N/A</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>6</td>"\
+                                "<td>N/A</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>7</td>"\
+                                "<td>N/A</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                            "<tr>"\
+                                "<td>8</td>"\
+                                "<td>N/A</td>"\
+                                "<td>%s</td>"\
+                            "</tr>"\
+                        "</table>"\
+                    "</body>"\
+                    "</html>"
+
 #endif /* _WEB_PAGE_H_ */
