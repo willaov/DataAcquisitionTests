@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 # (note this can come from environment, CMake cache etc)
 set(PICO_SDK_PATH "/home/pi/pico/pico-sdk")
 set(PICO_BOARD "pico_w")
+# set(PICO_BOARD "none")
 set(WIFI_SSID "Someplace")
 set(WIFI_PASSWORD "Error@franche")
 

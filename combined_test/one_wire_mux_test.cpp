@@ -38,13 +38,14 @@ uint check_for_devices(rom_address_t addresses[8]) {
     uint devices = 0;
     for (int i=0; i < 8; i++) {
         set_mux(i);
-        sleep_ms(1);
+        sleep_ms(10);
         int found = one_wire.find_and_count_devices_on_bus();
         if (found) {
             addresses[i] = one_wire.get_address(0);
             devices += 1;
             // printf("Found %02x%02x%02x%02x%02x%02x%02x%02x on %d\n", addresses[i].rom[0], addresses[i].rom[1], addresses[i].rom[2], addresses[i].rom[3], addresses[i].rom[4], addresses[i].rom[5], addresses[i].rom[6], addresses[i].rom[7], i);
         }
+        sleep_ms(10);
     }
     return devices;
 }

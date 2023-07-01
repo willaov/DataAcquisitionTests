@@ -43,6 +43,8 @@
 /* Retry count */
 #define DHCP_RETRY_COUNT 5
 
+// #define DO_DHCP
+
 /**
  * ----------------------------------------------------------------------------------------------------
  * Variables
@@ -52,11 +54,15 @@
 static wiz_NetInfo g_net_info =
     {
         .mac = {0x00, 0x08, 0xDC, 0x12, 0x34, 0x56}, // MAC address
-        .ip = {192, 168, 1, 15},                     // IP address
+        .ip = {192, 168, 2, 2},                     // IP address
         .sn = {255, 255, 255, 0},                    // Subnet Mask
-        .gw = {192, 168, 1, 1},                     // Gateway
-        .dns = {192, 168, 1, 1},                         // DNS server
+        .gw = {192, 168, 2, 1},                     // Gateway
+        .dns = {192, 168, 2, 1},                         // DNS server
+        #ifdef DO_DHCP
         .dhcp = NETINFO_DHCP                       // DHCP enable/disable
+        #else
+        .dhcp = NETINFO_STATIC
+        #endif
 };
 static uint8_t g_ethernet_buf[ETHERNET_BUF_MAX_SIZE] = {
     0,
@@ -106,8 +112,6 @@ int main()
         return -1;
     }
 
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-
     // ADC
     setup_adc();
     reset_adc();
@@ -123,8 +127,9 @@ int main()
     wizchip_initialize();
     wizchip_check();
 
-    // network_initialize(g_net_info);
-
+    #ifndef DO_DHCP
+    network_initialize(g_net_info);
+    #else
     wizchip_dhcp_init();
 
     uint8_t retval = 0;
@@ -162,14 +167,22 @@ int main()
             DHCP_stop();
 
             while (1)
-                ;
+            {
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+                sleep_ms(100);
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+                sleep_ms(100);
+            }
         }
     }
+    #endif
 
     httpServer_init(g_http_send_buf, g_http_recv_buf, HTTP_SOCKET_MAX_NUM, g_http_socket_num_list);
 
     /* Get network information */
     print_network_information(g_net_info);
+
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
     /* Pick Web Pages */
     // #define DATA_PAGE

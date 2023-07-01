@@ -22,7 +22,9 @@
 #define GPIO_2_5 17
 #define GPIO_3_5 16
 #define PWM_0_5 23
+#define PWM_0_5_CH PWM_CHAN_B
 #define PWM_1_5 22
+#define PWM_1_5_CH PWM_CHAN_A
 
 #define GPIO_0_6 7
 #define GPIO_1_6 6
@@ -74,7 +76,6 @@ void clk_init() {
 
 
 void I2CIRQHandler() {
-    gpio_put(GPIO_3_5, false);
     I2CB->hw->data_cmd = 0x55;
     I2CB->hw->clr_tx_abrt;
     I2CB->hw->clr_rd_req;
@@ -93,8 +94,8 @@ int main() {
     gpio_set_dir(GPIO_0_5, GPIO_OUT);
     gpio_put(GPIO_0_5, true);
     gpio_init(GPIO_1_5);
-    gpio_set_dir(GPIO_1_5, GPIO_OUT);
-    gpio_put(GPIO_1_5, true);
+    gpio_set_dir(GPIO_1_5, GPIO_IN);
+    gpio_set_pulls(GPIO_1_5, true, false);
 
     gpio_init(GPIO_2_5);
     gpio_set_dir(GPIO_2_5, GPIO_OUT);
@@ -107,14 +108,14 @@ int main() {
     uint slice_num_5 = pwm_gpio_to_slice_num(PWM_0_5);
     pwm_set_clkdiv(slice_num_5, 10.0);
     pwm_set_wrap(slice_num_5, 16);
-    pwm_set_chan_level(slice_num_5, PWM_CHAN_B, 8);      // 50% duty cycle
+    pwm_set_chan_level(slice_num_5, PWM_0_5_CH, 8);      // 50% duty cycle
     pwm_set_enabled(slice_num_5, true);
 
-    gpio_set_function(PWM_0_6, GPIO_FUNC_PWM);
-    uint slice_num_6 = pwm_gpio_to_slice_num(PWM_0_6);
+    gpio_set_function(PWM_1_5, GPIO_FUNC_PWM);
+    uint slice_num_6 = pwm_gpio_to_slice_num(PWM_1_5);
     pwm_set_clkdiv(slice_num_6, 10.0);
     pwm_set_wrap(slice_num_6, 16);
-    pwm_set_chan_level(slice_num_6, PWM_0_6_CH, 8);      // 50%?
+    pwm_set_chan_level(slice_num_6, PWM_1_5_CH, 8);      // 50%?
     pwm_set_enabled(slice_num_6, true);
 
     uint8_t pwm_switch = 8;
@@ -138,6 +139,8 @@ int main() {
     irq_set_enabled(I2C0_IRQ, true);
 
     while (true) {
+        gpio_put(GPIO_3_5, gpio_get(GPIO_1_5));
+
         gpio_put(GPIO_2_5, true);
         gpio_put(GPIO_0_5, true);
         sleep_ms(1);
@@ -146,8 +149,8 @@ int main() {
         sleep_ms(1);
         pwm_switch += 1;
         if (pwm_switch > 16) pwm_switch = 0;
-        pwm_set_chan_level(slice_num_5, PWM_CHAN_B, pwm_switch);
+        pwm_set_chan_level(slice_num_5, PWM_0_5_CH, pwm_switch);
     }
-    
+
     return 0;
 }
